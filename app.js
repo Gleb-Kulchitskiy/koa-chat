@@ -44,10 +44,14 @@ router.get('/subscribe', async (ctx, next) => {
 	ctx.body = message;
 });
 
-router.post('/publish', async (ctx, next) => {
-	
+async function saveToDb(ctx,next) {
 	await Message.create({email: ctx.request.body.email, message: ctx.request.body.message})
 		.then(() => console.log('saved'));
+		
+	await next();
+}
+
+router.post('/publish', saveToDb, async (ctx, next) => {
 	
 	const message = ctx.request.body.message;
 	
