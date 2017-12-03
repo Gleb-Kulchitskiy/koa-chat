@@ -53,7 +53,7 @@ async function saveToDb(ctx,next) {
 
 router.post('/publish', saveToDb, async (ctx, next) => {
 	
-	const message = ctx.request.body.message;
+	const message = ctx.request.body.message; 
 	
 	if (!message) {
 		ctx.throw(400);
