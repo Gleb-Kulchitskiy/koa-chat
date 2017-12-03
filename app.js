@@ -18,11 +18,11 @@ const Message = mongoose.model('Message', messageSchema);
 let users = [];
 
 router.get('/subscribe', async (ctx, next) => {
-	
+
   ctx.set('Cache-Control', 'no-cache, must-revalidate');
   const promise = new Promise((resolve, reject) => {
     users.push(resolve);
-		
+
     ctx.res.on('close', function () {
       users.splice(users.indexOf(resolve), 1);
       const error = new Error('Connection closed');
@@ -30,42 +30,42 @@ router.get('/subscribe', async (ctx, next) => {
       reject(error);
     });
   });
-  
+
   let message;
-	
+
   try {
     message = await promise;
     } catch (err) {
     if (err.code === 'ECONNRESET') return;
     throw err;
   }
-	
+
   console.log('DONE', message);
   ctx.body = message;
 });
 
 async function saveToDb(ctx,next) {
-	await Message.create({email: ctx.request.body.email, message: ctx.request.body.message})
-		.then(() => console.log('saved'));
-		
-	await next();
+  await Message.create({email: ctx.request.body.email, message: ctx.request.body.message})
+    .then(() => console.log('saved'));
+
+  await next();
 }
 
 router.post('/publish', saveToDb, async (ctx, next) => {
-	
+
   const message = ctx.request.body.message;
-	
+
   if (!message) {
     ctx.throw(400);
   }
   users.forEach(function (resolve) {
   resolve(String(message));
   });
-	
+
   users = [];
-	
+
   ctx.body = 'ok';
-	
+
 });
 
 async function loadMessageById(ctx, next) {
