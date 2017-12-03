@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate');
-
+ 
 const messageSchema = new mongoose.Schema({
 		email:   {
 			type:     String,
