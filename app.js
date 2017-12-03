@@ -11,7 +11,7 @@ const messageSchema = require('./models/message');
 app.keys = [config.secret];
 
 fs.readdirSync(path.join(__dirname, 'middleware')).sort()
-	.forEach(middleware => require('./middleware/' + middleware).init(app));
+  .forEach(middleware => require('./middleware/' + middleware).init(app));
 
 const Message = mongoose.model('Message', messageSchema);
 
@@ -19,76 +19,76 @@ let users = [];
 
 router.get('/subscribe', async (ctx, next) => {
 	
-	ctx.set('Cache-Control', 'no-cache, must-revalidate');
-	const promise = new Promise((resolve, reject) => {
-		users.push(resolve);
+  ctx.set('Cache-Control', 'no-cache, must-revalidate');
+  const promise = new Promise((resolve, reject) => {
+    users.push(resolve);
 		
-		ctx.res.on('close', function () {
-			users.splice(users.indexOf(resolve), 1);
-			const error = new Error('Connection closed');
-			error.code = 'ECONNRESET';
-			reject(error);
-		});
-	});
+    ctx.res.on('close', function () {
+      users.splice(users.indexOf(resolve), 1);
+      const error = new Error('Connection closed');
+      error.code = 'ECONNRESET';
+      reject(error);
+    });
+  });
 	
-	let message;
+  let message;
 	
-	try {
-		message = await promise;
-	} catch (err) {
-		if (err.code === 'ECONNRESET') return;
-		throw err;
-	}
+  try {
+    message = await promise;
+    } catch (err) {
+    if (err.code === 'ECONNRESET') return;
+    throw err;
+  }
 	
-	console.log('DONE', message);
-	ctx.body = message;
+  console.log('DONE', message);
+  ctx.body = message;
 });
 
 router.post('/publish', async (ctx, next) => {
 	
-	await Message.create({email: ctx.request.body.email, message: ctx.request.body.message})
-		.then(() => console.log('saved'));
+  await Message.create({email: ctx.request.body.email, message: ctx.request.body.message})
+  .then(() => console.log('saved'));
 	
-	const message = ctx.request.body.message;
+  const message = ctx.request.body.message;
 	
-	if (!message) {
-		ctx.throw(400);
-	}
-	users.forEach(function (resolve) {
-		resolve(String(message));
-	});
+  if (!message) {
+    ctx.throw(400);
+  }
+  users.forEach(function (resolve) {
+  resolve(String(message));
+  });
 	
-	users = [];
+  users = [];
 	
-	ctx.body = 'ok';
+  ctx.body = 'ok';
 	
 });
 
 async function loadMessageById(ctx, next) {
-	if (!mongoose.Types.ObjectId.isValid(ctx.params.messageById)) {
-		ctx.throw(400);
-	}
-	ctx.messageById = await Message.findById(ctx.params.messageById);
-	if (!ctx.messageById) {
-		ctx.throw(400);
-	}
-	await next();
+  if (!mongoose.Types.ObjectId.isValid(ctx.params.messageById)) {
+    ctx.throw(400);
+  }
+  ctx.messageById = await Message.findById(ctx.params.messageById);
+  if (!ctx.messageById) {
+    ctx.throw(400);
+  }
+  await next();
 }
 
 async function loadPaginationMessages(ctx, next) {
-	const number = ctx.params.number * 10;
-	await Message.paginate({}, {offset: number, limit: 10})
-		.then((result) => ctx.paginationMessages = result);
-	await next();
+  const number = ctx.params.number * 10;
+  await Message.paginate({}, {offset: number, limit: 10})
+    .then((result) => ctx.paginationMessages = result);
+    await next();
 }
 
 router
-	.get('/messages/single/:messageById', loadMessageById, function (ctx) {
-		ctx.body = ctx.messageById.toObject();
-	})
-	.get('/messages/list/:number', loadPaginationMessages, function (ctx) {
-		ctx.body = ctx.paginationMessages;
-	});
+  .get('/messages/single/:messageById', loadMessageById, function (ctx) {
+  ctx.body = ctx.messageById.toObject();
+  })
+  .get('/messages/list/:number', loadPaginationMessages, function (ctx) {
+  ctx.body = ctx.paginationMessages;
+  });
 
 app.use(router.routes());
 app.listen(3000);
